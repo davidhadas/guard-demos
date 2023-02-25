@@ -1,8 +1,6 @@
 apiVersion: guard.security.knative.dev/v1alpha1
 kind: Guardian
 metadata:
-  annotations:
-    kubectl.kubernetes.io/last-applied-configuration: |
   name: guard-vulnerable-app
   namespace: default
 spec:
@@ -74,19 +72,9 @@ spec:
               spaces: 0
               unicodeFlags: null
               unicodes: 0
-            Purpose:
-              digits: 0
-              flags: 0
-              letters: 8
-              nonreadables: 0
-              schars: 0
-              sequences: 1
-              spaces: 0
-              unicodeFlags: null
-              unicodes: 0
             Sec-Ch-Ua:
               digits: 8
-              flags: 8553602
+              flags: 8553474
               letters: 24
               nonreadables: 0
               schars: 18
@@ -151,16 +139,6 @@ spec:
               nonreadables: 0
               schars: 1
               sequences: 2
-              spaces: 0
-              unicodeFlags: null
-              unicodes: 0
-            Sec-Purpose:
-              digits: 0
-              flags: 32768
-              letters: 16
-              nonreadables: 0
-              schars: 1
-              sequences: 3
               spaces: 0
               unicodeFlags: null
               unicodes: 0
@@ -299,6 +277,8 @@ spec:
           unicodeFlags: null
           unicodes: 0
     reqbody:
+      faults:
+        set: []
       structured: null
       unstructured: null
     resp:
@@ -360,6 +340,8 @@ spec:
           - text/plain
           - text/html
     respbody:
+      faults:
+        set: []
       structured: null
       unstructured: null
   samples: 85

@@ -7,3 +7,8 @@ kubectl apply -f https://raw.githubusercontent.com/knative-sandbox/security-guar
 kubectl apply -f https://raw.githubusercontent.com/knative-sandbox/security-guard/release-0.4/config/resources/guardiansCrd.yaml
 kubectl apply -f guard-service-NoAuth.yaml
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/kind/deploy.yaml
+echo "waiting for ingrss to be ready"
+sleep  5
+# wait for ingress to be ready
+kubectl wait --namespace ingress-nginx --for=condition=ready pod --selector=app.kubernetes.io/component=controller  --timeout=120s
+
