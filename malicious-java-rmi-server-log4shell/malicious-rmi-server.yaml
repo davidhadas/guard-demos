@@ -1,0 +1,38 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: malicious-rmi-server
+  namespace: default
+  labels:
+    app: malicious-rmi-server
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: malicious-rmi-server
+  template:
+    metadata:
+      labels:
+        app: malicious-rmi-server
+    spec:
+      containers:
+      - env:
+        - name: PORT
+          value: "8080"
+        image: malicious-rmi-server
+        imagePullPolicy: Never
+        name: malicious-rmi-server
+        ports:
+        - containerPort: 1099
+          name: user-port
+          protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: malicious-rmi-server 
+spec:
+  selector:
+    app: malicious-rmi-server
+  ports:
+    - port: 1099

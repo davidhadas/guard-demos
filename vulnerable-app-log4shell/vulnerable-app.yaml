@@ -1,0 +1,57 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vulnerable-app
+  namespace: default
+  labels:
+    app: vulnerable-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vulnerable-app
+  template:
+    metadata:
+      labels:
+        app: vulnerable-app
+    spec:
+      containers:
+      - env:
+        - name: PORT
+          value: "8080"
+        image: vulnerable-app
+        imagePullPolicy: Never
+        name: vulnerable-app
+        ports:
+        - containerPort: 8080
+          name: user-port
+          protocol: TCP
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: vulnerable-app
+spec:
+  selector:
+    app: vulnerable-app 
+  ports:
+    - port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vulnerable-app
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+  - http:
+      paths:
+      - pathType: Prefix
+        path: "/unprotected(/|$)(.*)"
+        backend:
+          service:
+            name: vulnerable-app
+            port:
+              number: 8080

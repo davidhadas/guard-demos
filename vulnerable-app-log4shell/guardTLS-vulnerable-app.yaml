@@ -1,0 +1,100 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: guard-vulnerable-app
+  namespace: default
+  labels:
+    app: guard-vulnerable-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: guard-vulnerable-app
+  template:
+    metadata:
+      labels:
+        app: guard-vulnerable-app
+    spec:
+      volumes:
+      - name: guard-token-volume
+        projected:
+          defaultMode: 420
+          sources:
+          - serviceAccountToken:
+              audience: guard-service
+              expirationSeconds: 3600
+              path: guard-service
+      restartPolicy: Always
+      serviceAccountName: guardian-reader
+      containers:
+      - env:
+        - name: PORT
+          value: "8080"
+        image: vulnerable-app
+        imagePullPolicy: Never
+        name: vulnerable-app
+        ports:
+        - containerPort: 8080
+          name: user-port
+          protocol: TCP
+      - name: guard-rproxy
+        image: gcr.io/knative-releases/knative.dev/security-guard/cmd/guard-rproxy@sha256:05ee3306bdca62129b04423b2ed8f2f797cefc5b0eb6550ba52b94ddfd36d136
+        imagePullPolicy: Always
+        ports:
+        - containerPort: 22000
+          name: guard-port
+          protocol: TCP
+        volumeMounts:
+        - mountPath: /var/run/secrets/tokens
+          name: guard-token-volume
+        env:
+        - name: GUARD_URL
+          value: "https://guard-service.knative-serving"
+        - name: LOG_LEVEL
+          value: "info"
+        - name: SERVICE_NAME
+          value: "guard-vulnerable-app"
+        - name: NAMESPACE
+          value: "default"
+        - name: SERVICE_URL
+          value: "http://127.0.0.1:8080"
+        - name: USE_CRD
+          value: "true"
+        - name: MONITOR_POD
+          value: "true"
+        - name: GUARDIAN_SYNC_INTERVAL
+          value: "60s"
+        - name: ROOT_CA
+          valueFrom:
+            secretKeyRef:
+              name: serving-certs-ctrl-ca-public
+              key: ca.crt
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: guard-vulnerable-app
+spec:
+  selector:
+    app: guard-vulnerable-app 
+  ports:
+    - port: 22000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: guard-vulnerable-app
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
+spec:
+  rules:
+  - http:
+      paths:
+      - pathType: Prefix
+        path: "/guard(/|$)(.*)"
+        backend:
+          service:
+            name: guard-vulnerable-app
+            port:
+              number: 22000
